@@ -34,7 +34,7 @@ public class NetworkPropertyHandler : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        Logging.Debug("Found", GorillaParent.instance.vrrigs.Count, "vrrigs and ", PhotonNetwork.PlayerList.Length,
+        Logging.Debug("Found", VRRigCache.ActiveRigs.Count, "vrrigs and ", PhotonNetwork.PlayerList.Length,
             "players.");
         foreach (var player in PhotonNetwork.PlayerList) StartCoroutine(CreateNetworkedPlayer(player));
         NetworkSystem.Instance.OnPlayerJoined += OnPlayerEnteredRoom;

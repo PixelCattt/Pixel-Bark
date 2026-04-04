@@ -18,7 +18,7 @@ public class GestureTracker : MonoBehaviour
         "Player Objects/Local VRRig/Local Gorilla Player";
 
     public const string palmPath =
-        "/GorillaPlayerNetworkedRigAnchor/rig/body/shoulder.{0}/upper_arm.{0}/forearm.{0}/hand.{0}/palm.01.{0}";
+        "/rig/hand.{0}/palm.01.{0}";
 
     public const string pointerFingerPath =
         palmPath + "/f_index.01.{0}/f_index.02.{0}/f_index.03.{0}";
@@ -42,7 +42,7 @@ public class GestureTracker : MonoBehaviour
         rightPointerInteractor;
 
     public Transform leftPointerTransform, rightPointerTransform, leftThumbTransform, rightThumbTransform;
-    public bool isIlluminatiing, isChargingKamehameha;
+    public bool isIlluminatiing;
 
     public float camOffset = -45f;
 
@@ -75,7 +75,7 @@ public class GestureTracker : MonoBehaviour
         leftTrigger;
 
     public Action<Vector3> OnGlide;
-    public Action OnIlluminati, OnKamehameha;
+    public Action OnIlluminati;
 
 
     // Gesture Actions
@@ -147,7 +147,6 @@ public class GestureTracker : MonoBehaviour
         TrackBodyVectors();
         TrackGlideGesture();
         isIlluminatiing = TrackIlluminatiGesture();
-        isChargingKamehameha = TrackKamehamehaGesture();
     }
 
     private void FixedUpdate()
@@ -214,26 +213,6 @@ public class GestureTracker : MonoBehaviour
         if (PalmsFacingSameWay())
         {
             OnIlluminati?.Invoke();
-            return true;
-        }
-
-        return false;
-    }
-
-    private bool TrackKamehamehaGesture()
-    {
-        var scale = GTPlayer.Instance.scale;
-        // Check if palms are too far away. If so, leave.
-        if (
-            Vector3.Distance(
-                leftPalmInteractor.transform.position,
-                rightPalmInteractor.transform.position
-            ) > .25f * scale)
-            return false;
-
-        if (PalmsFacingEachOther() && FingersFacingAway())
-        {
-            OnKamehameha?.Invoke();
             return true;
         }
 

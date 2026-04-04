@@ -19,7 +19,7 @@ public class Piggyback : GrateModule
     public static bool mounted;
 
     public static Piggyback Instance;
-    private readonly Vector3 mountOffset = new(0, 1f, -1f);
+    private readonly Vector3 mountOffset = new(0, 0.25f, -0.25f);
     private bool latchedWithLeft;
     private Transform mount;
     private VRRig mountedRig;
@@ -47,7 +47,7 @@ public class Piggyback : GrateModule
             else
             {
                 var position = mount.TransformPoint(mountOffset);
-                GTPlayer.Instance.TeleportTo(mount);
+                GTPlayer.Instance.TeleportTo(position, mount.rotation);
             }
         }
     }
@@ -92,7 +92,7 @@ public class Piggyback : GrateModule
         VRRig closestRig = null;
         Transform closestTransform = null;
         var closestDistance = Mathf.Infinity;
-        foreach (var rig in GorillaParent.instance.vrrigs)
+        foreach (var rig in VRRigCache.ActiveRigs)
             try
             {
                 if (rig.OwningNetPlayer.IsLocal) continue;

@@ -12,10 +12,7 @@ public static class PlayerExtensions
 {
     private static readonly HashSet<string> DeveloperIds = new()
     {
-        "42D7D32651E93866", // graze
-        "9ABD0C174289F58E", // baggZ
-        "B1B20DEEEDB71C63", // monky
-        "A48744B93D9A3596" // Goudabuda
+        "wawa" // WaWa
     };
 
     public static void AddForce(this GTPlayer self, Vector3 v)
@@ -64,7 +61,7 @@ public static class PlayerExtensions
 
     public static VRRig? Rig(this NetPlayer? player)
     {
-        return GorillaParent.instance.vrrigs.FirstOrDefault(rig => rig.OwningNetPlayer == player);
+        return VRRigCache.ActiveRigs.FirstOrDefault(rig => rig.OwningNetPlayer == player);
     }
 
     // Use Plugin.localPlayerDev for checking if the local player is a dev
@@ -79,7 +76,7 @@ public static class PlayerExtensions
         return IsDev(player);
     }
 
-    public static bool IsSupporter(this NetPlayer player)
+    public static bool IsTrusted(this NetPlayer player)
     {
         return IsDev(player);
     }

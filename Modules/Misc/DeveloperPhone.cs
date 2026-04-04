@@ -10,26 +10,26 @@ using NetworkPlayer = NetPlayer;
 
 namespace Grate.Modules.Misc;
 
-public class Supporter : GrateModule
+public class DeveloperPhone : GrateModule
 {
-    private static readonly string DisplayName = "Trusted Phone";
-    private static GameObject? _phone;
+    public static string DisplayName = "Dev Phone";
+    private static GameObject Phone;
 
     protected override void Start()
     {
         base.Start();
-        if (_phone == null)
+        if (Phone == null)
         {
-            _phone = Instantiate(Plugin.AssetBundle.LoadAsset<GameObject>("PHONE"));
-            _phone.transform.SetParent(GestureTracker.Instance.rightHand.transform, true);
-            _phone.transform.localPosition = new Vector3(-1.5f, 0.2f, 0.1f);
-            _phone.transform.localRotation = Quaternion.Euler(2, 10, 0);
-            _phone.transform.localScale /= 2;
+            Phone = Instantiate(Plugin.AssetBundle.LoadAsset<GameObject>("DEVPHONE"));
+            Phone.transform.SetParent(GestureTracker.Instance.rightHand.transform, true);
+            Phone.transform.localPosition = new Vector3(-1.5f, 0.2f, 0.1f);
+            Phone.transform.localRotation = Quaternion.Euler(2, 10, 0);
+            Phone.transform.localScale /= 2;
         }
 
         NetworkPropertyHandler.Instance.OnPlayerModStatusChanged += OnPlayerModStatusChanged;
         VRRigCachePatches.OnRigCached += OnRigCached;
-        _phone?.SetActive(false);
+        Phone.SetActive(false);
     }
 
     protected override void OnEnable()
@@ -38,7 +38,7 @@ public class Supporter : GrateModule
         base.OnEnable();
         try
         {
-            _phone?.SetActive(true);
+            Phone.SetActive(true);
         }
         catch (Exception e)
         {
@@ -46,23 +46,25 @@ public class Supporter : GrateModule
         }
     }
 
-    private void OnPlayerModStatusChanged(NetworkPlayer player, string mod, bool modEnabled)
+    private void OnPlayerModStatusChanged(NetworkPlayer player, string mod, bool enabled)
     {
-        if (mod != DisplayName || !player.IsSupporter()) return;
-        if (modEnabled)
-            player.Rig()?.gameObject.GetOrAddComponent<NetPhone>();
-        else
-            Destroy(player.Rig()?.gameObject.GetComponent<NetPhone>());
+        if (mod == DisplayName && player.IsDev())
+        {
+            if (enabled)
+                player.Rig().gameObject.GetOrAddComponent<NetDevPhone>();
+            else
+                Destroy(player.Rig().gameObject.GetComponent<NetDevPhone>());
+        }
     }
 
     protected override void Cleanup()
     {
-        _phone?.SetActive(false);
+        Phone?.SetActive(false);
     }
 
-    private static void OnRigCached(NetworkPlayer player, VRRig rig)
+    private void OnRigCached(NetPlayer player, VRRig rig)
     {
-        rig?.gameObject?.GetComponent<NetPhone>()?.Obliterate();
+        rig?.gameObject?.GetComponent<NetDevPhone>()?.Obliterate();
     }
 
     public override string GetDisplayName()
@@ -72,23 +74,22 @@ public class Supporter : GrateModule
 
     public override string Tutorial()
     {
-        return "given out to people the grate developers and the Supporters";
+        return "Only for Dev-Moke";
     }
 
-    private class NetPhone : MonoBehaviour
+    private class NetDevPhone : MonoBehaviour
     {
-        private NetworkedPlayer? networkedPlayer;
-        private GameObject? phone;
+        private NetworkedPlayer networkedPlayer;
+        private GameObject phone;
 
         private void OnEnable()
         {
             networkedPlayer = gameObject.GetComponent<NetworkedPlayer>();
             var rightHand = networkedPlayer.rig.rightHandTransform;
 
-            phone = Instantiate(_phone, rightHand, false);
+            phone = Instantiate(Phone);
 
-            if (phone == null)
-                return;
+            phone.transform.SetParent(rightHand);
             phone.transform.localPosition = new Vector3(0.0992f, 0.06f, 0.02f);
             phone.transform.localRotation = Quaternion.Euler(270, 163.12f, 0);
             Vector3 localScale = phone.transform.localScale/20;
@@ -100,12 +101,12 @@ public class Supporter : GrateModule
 
         private void OnDisable()
         {
-            phone?.Obliterate();
+            phone.Obliterate();
         }
 
         private void OnDestroy()
         {
-            phone?.Obliterate();
+            phone.Obliterate();
         }
     }
 }

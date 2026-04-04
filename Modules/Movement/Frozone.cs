@@ -1,144 +1,147 @@
 ﻿using System.Collections.Generic;
-using Grate.Gestures;
-using Grate.GUI;
-using Grate.Networking;
+using GorillaLocomotion;
 using UnityEngine;
 using UnityEngine.XR;
+using Grate.Gestures;
 
-namespace Grate.Modules.Movement;
-
-internal class Frozone : GrateModule
+namespace Grate.Modules.Movement
 {
-    public static GameObject IcePrefab;
-    public static Vector3 LhandOffset = Vector3.down * 0.05f;
-    public static Vector3 RhandOffset = Vector3.down * 0.107f;
-    private readonly List<GameObject> prevLIce = new();
-    private readonly List<GameObject> prevRIce = new();
-
-    private InputTracker? inputL;
-    private InputTracker? inputR;
-
-    private bool leftPress, rightPress;
-    private Transform leftHandTransform => VRRig.LocalRig.leftHandTransform;
-    private Transform rightHandTransform => VRRig.LocalRig.rightHandTransform;
-
-    protected override void Start()
+    internal class Frozone : GrateModule
     {
-        base.Start();
-        IcePrefab = Plugin.AssetBundle.LoadAsset<GameObject>("Ice");
-        IcePrefab.GetComponent<BoxCollider>().enabled = true;
-        IcePrefab.AddComponent<GorillaSurfaceOverride>().overrideIndex = 59;
-    }
+        private static GameObject IcePrefab;
 
-    private void FixedUpdate()
-    {
-        if (leftPress)
+        private static readonly Dictionary<bool, List<GameObject>> frozonicPlatforms = new();
+        private static readonly Dictionary<bool, List<float>> frozonicTimes = new();
+        private static readonly Dictionary<bool, int> platformIndex = new();
+
+        private const float lifetime = 2.5f;
+        private const int maxPlatforms = 72;
+
+        private bool leftGrab;
+        private bool rightGrab;
+
+        public override string GetDisplayName() => "Frozone";
+
+        public override string Tutorial() =>
+            "Hold grip to create ice platforms. They last ~2.5 seconds.";
+
+        protected override void Start()
         {
-            if (prevLIce.Count > 19)
+            base.Start();
+
+            // restore YOUR original prefab usage
+            IcePrefab = Plugin.AssetBundle.LoadAsset<GameObject>("Ice");
+        }
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+
+            var left = GestureTracker.Instance.GetInputTracker("grip", XRNode.LeftHand);
+            var right = GestureTracker.Instance.GetInputTracker("grip", XRNode.RightHand);
+
+            left.OnPressed += OnActivate;
+            left.OnReleased += OnDeactivate;
+
+            right.OnPressed += OnActivate;
+            right.OnReleased += OnDeactivate;
+        }
+
+        protected override void Cleanup()
+        {
+            var left = GestureTracker.Instance.GetInputTracker("grip", XRNode.LeftHand);
+            var right = GestureTracker.Instance.GetInputTracker("grip", XRNode.RightHand);
+
+            left.OnPressed -= OnActivate;
+            left.OnReleased -= OnDeactivate;
+
+            right.OnPressed -= OnActivate;
+            right.OnReleased -= OnDeactivate;
+        }
+
+        private void OnActivate(InputTracker tracker)
+        {
+            if (tracker.node == XRNode.LeftHand) leftGrab = true;
+            if (tracker.node == XRNode.RightHand) rightGrab = true;
+        }
+
+        private void OnDeactivate(InputTracker tracker)
+        {
+            if (tracker.node == XRNode.LeftHand) leftGrab = false;
+            if (tracker.node == XRNode.RightHand) rightGrab = false;
+        }
+
+        private (Vector3 position, Quaternion rotation, Vector3 right) GetHand(bool left)
+        {
+            var hand = left
+                ? GorillaTagger.Instance.leftHandTransform
+                : GorillaTagger.Instance.rightHandTransform;
+
+            return (hand.position, hand.rotation, hand.right);
+        }
+
+        private void FixedUpdate()
+        {
+            HandleFrozone(true);
+            HandleFrozone(false);
+        }
+
+        public void HandleFrozone(bool left)
+        {
+            bool grip = left ? leftGrab : rightGrab;
+
+            if (!frozonicPlatforms.TryGetValue(left, out var list))
             {
-                var ice = prevLIce[0];
-                prevLIce.RemoveAt(0);
-                ice.SetActive(true);
-                ice.transform.position = leftHandTransform.position + LhandOffset;
-                ice.transform.rotation = leftHandTransform.rotation;
-                prevLIce.Add(ice);
+                list = new List<GameObject>();
+                frozonicPlatforms[left] = list;
             }
-            else
+
+            if (!frozonicTimes.TryGetValue(left, out var times))
             {
-                var ice = Instantiate(IcePrefab);
-                ice.AddComponent<RoomSpecific>();
-                ice.transform.position = leftHandTransform.position + LhandOffset;
-                ice.transform.rotation = leftHandTransform.rotation;
-                prevLIce.Add(ice);
+                times = new List<float>();
+                frozonicTimes[left] = times;
             }
-        }
-        else
-        {
-            foreach (var ice in prevLIce) ice.SetActive(false);
-        }
 
-        if (rightPress)
-        {
-            if (prevRIce.Count >= 20)
+            platformIndex.TryGetValue(left, out int index);
+
+            if (grip)
             {
-                var ice = prevRIce[0];
-                prevRIce.RemoveAt(0);
-                ice.SetActive(true);
+                var hand = GetHand(left);
 
-                ice.transform.position = rightHandTransform.position + RhandOffset;
-                ice.transform.rotation = rightHandTransform.rotation;
-                prevRIce.Add(ice);
+                GameObject platform;
+
+                if (list.Count >= maxPlatforms)
+                {
+                    platform = list[index];
+                }
+                else
+                {
+                    platform = Object.Instantiate(IcePrefab);
+                    platform.AddComponent<GorillaSurfaceOverride>().overrideIndex = 61;
+
+                    list.Add(platform);
+                    times.Add(Time.time);
+                }
+
+                platform.transform.position = hand.position;
+                platform.transform.rotation = hand.rotation;
+
+                if (index < times.Count)
+                    times[index] = Time.time;
+
+                platformIndex[left] = (index + 1) % maxPlatforms;
             }
-            else
+
+            // 2.5 second lifetime cleanup
+            for (int i = list.Count - 1; i >= 0; i--)
             {
-                var ice = Instantiate(IcePrefab);
-                ice.AddComponent<RoomSpecific>();
-                ice.transform.position = rightHandTransform.position + RhandOffset;
-                ice.transform.rotation = rightHandTransform.rotation;
-                prevRIce.Add(ice);
+                if (Time.time - times[i] > lifetime)
+                {
+                    Object.Destroy(list[i]);
+                    list.RemoveAt(i);
+                    times.RemoveAt(i);
+                }
             }
         }
-        else
-        {
-            foreach (var ice in prevRIce) ice.SetActive(false);
-        }
-    }
-
-
-    protected override void OnEnable()
-    {
-        if (!MenuController.Instance.Built) return;
-        base.OnEnable();
-        inputL = GestureTracker.Instance.GetInputTracker("grip", XRNode.LeftHand);
-        inputL.OnPressed += OnActivate;
-        inputL.OnReleased += OnDeactivate;
-
-        inputR = GestureTracker.Instance.GetInputTracker("grip", XRNode.RightHand);
-        inputR.OnPressed += OnActivate;
-        inputR.OnReleased += OnDeactivate;
-        Plugin.MenuController.GetComponent<Platforms>().button.AddBlocker(ButtonController.Blocker.MOD_INCOMPAT);
-    }
-
-    public override string GetDisplayName()
-    {
-        return "Frozone";
-    }
-
-    public override string Tutorial()
-    {
-        return "Like Platforms but you slide!";
-    }
-
-    private void OnActivate(InputTracker tracker)
-    {
-        if (tracker.node == XRNode.LeftHand) leftPress = true;
-        if (tracker.node == XRNode.RightHand) rightPress = true;
-    }
-
-    private void Unsub()
-    {
-        if (inputL != null)
-        {
-            inputL.OnPressed -= OnActivate;
-            inputL.OnReleased -= OnDeactivate;
-        }
-
-        if (inputR != null)
-        {
-            inputR.OnPressed -= OnActivate;
-            inputR.OnReleased -= OnDeactivate;
-        }
-    }
-
-    private void OnDeactivate(InputTracker tracker)
-    {
-        if (tracker.node == XRNode.LeftHand) leftPress = false;
-        if (tracker.node == XRNode.RightHand) rightPress = false;
-    }
-
-    protected override void Cleanup()
-    {
-        Unsub();
-        Plugin.MenuController.GetComponent<Platforms>().button.RemoveBlocker(ButtonController.Blocker.MOD_INCOMPAT);
     }
 }

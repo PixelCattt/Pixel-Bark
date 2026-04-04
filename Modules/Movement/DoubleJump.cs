@@ -17,11 +17,12 @@ public class DoubleJump : GrateModule
 
     private Vector3 direction;
     public static bool primaryPressed => GestureTracker.Instance.rightPrimary.pressed;
+    public static bool secondaryPressed => GestureTracker.Instance.rightSecondary.pressed;
 
     private void FixedUpdate()
     {
         if (_player.rightHand.wasColliding || _player.leftHand.wasColliding) canDoubleJump = true;
-        if (canDoubleJump && primaryPressed && !(_player.rightHand.wasColliding || _player.leftHand.wasColliding))
+        if (canDoubleJump && (primaryPressed || secondaryPressed) && !(_player.rightHand.wasColliding || _player.leftHand.wasColliding))
         {
             direction = (_player.headCollider.transform.forward + Vector3.up) / 2;
             _rigidbody.velocity = new Vector3(direction.x, direction.y, direction.z) * _player.maxJumpSpeed *
@@ -49,9 +50,9 @@ public class DoubleJump : GrateModule
             case "Medium":
                 return 2.5f;
             case "High":
-                return 2.8f;
+                return 3f;
             case "Super Jump":
-                return 3.3f;
+                return 3.5f;
         }
     }
 

@@ -1,25 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
 using HarmonyLib;
 
 namespace Grate.Patches;
 
-[HarmonyPatch]
+[HarmonyPatch(typeof(VRRigCache), nameof(VRRigCache.OnPlayerLeftRoom))]
 public class VRRigCachePatches
 {
     public static Action<NetPlayer, VRRig> OnRigCached;
 
-    private static IEnumerable<MethodBase> TargetMethods()
+    private static void Postfix(NetPlayer leavingPlayer)
     {
-        return new MethodBase[]
+        if (VRRigCache.rigsInUse.TryGetValue(leavingPlayer, out RigContainer container))
         {
-            AccessTools.Method("VRRigCache:RemoveRigFromGorillaParent")
-        };
-    }
-
-    private static void Postfix(NetPlayer player, VRRig vrrig)
-    {
-        OnRigCached?.Invoke(player, vrrig);
+            OnRigCached?.Invoke(leavingPlayer, container.Rig);
+        }
     }
 }

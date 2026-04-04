@@ -25,7 +25,7 @@ internal class ESP : GrateModule
     {
         VRRigCachePatches.OnRigCached += OnRigCached;
         NetworkPropertyHandler.Instance.OnPlayerJoined += OnPlayerJoined;
-        foreach (var rig in GorillaParent.instance.vrrigs)
+        foreach (var rig in VRRigCache.ActiveRigs)
             if (!rig.isOfflineVRRig)
             {
                 rig.skeleton.renderer.enabled = true;
@@ -69,7 +69,7 @@ internal class ESP : GrateModule
     {
         VRRigCachePatches.OnRigCached -= OnRigCached;
         NetworkPropertyHandler.Instance.OnPlayerJoined -= OnPlayerJoined;
-        foreach (var rig in GorillaParent.instance.vrrigs)
+        foreach (var rig in VRRigCache.ActiveRigs)
         {
             rig.skeleton.renderer.enabled = false;
             rig.skeleton.renderer.material.shader = Uber;

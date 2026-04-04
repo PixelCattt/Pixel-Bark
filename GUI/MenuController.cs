@@ -32,6 +32,8 @@ public class MenuController : GrateGrabbable
     private static ConfigEntry<string>? _theme;
     public static Material[]? ShinyRocks;
 
+    private bool AdminMods = false;
+
     public static bool Debugger = true;
 
     public Vector3
@@ -92,6 +94,7 @@ public class MenuController : GrateGrabbable
                 gameObject.AddComponent<SlipperyHands>(),
                 gameObject.AddComponent<DisableWind>(),
                 gameObject.AddComponent<UpsideDown>(),
+                gameObject.AddComponent<Freeze>(),
 
                 //// Teleportation
                 gameObject.AddComponent<Checkpoint>(),
@@ -106,37 +109,25 @@ public class MenuController : GrateGrabbable
                 gameObject.AddComponent<Grab>(),
                 gameObject.AddComponent<Fireflies>(),
                 gameObject.AddComponent<ESP>(),
-                gameObject.AddComponent<RatSword>(),
-                gameObject.AddComponent<Kamehameha>()
-
-                //// Misc
-                //gameObject.AddComponent<ReturnToVS>(),
-                //gameObject.AddComponent<Lobby>(),
+                gameObject.AddComponent<RatSword>()
             };
-            var meow = gameObject.AddComponent<CatMeow>();
-            if (NetworkSystem.Instance.LocalPlayer.UserId == "FBE3EE50747CB892") modules.Add(meow);
-            var sb = gameObject.AddComponent<StoneBroke>();
-            if (NetworkSystem.Instance.LocalPlayer.UserId == "CA8FDFF42B7A1836") modules.Add(sb);
-            var bs = gameObject.AddComponent<Baggy>();
-            if (NetworkSystem.Instance.LocalPlayer.UserId == "9ABD0C174289F58E") modules.Add(bs);
-            var g = gameObject.AddComponent<Grazing>();
-            if (NetworkSystem.Instance.LocalPlayer.UserId == "42D7D32651E93866") modules.Add(g);
-            var ch = gameObject.AddComponent<Cheese>();
-            if (NetworkSystem.Instance.LocalPlayer.UserId == "B1B20DEEEDB71C63") modules.Add(ch);
-            var hanSolo1000FalconCoolHat = gameObject.AddComponent<HanSolo1000FalconCoolHat>();
-            if (NetworkSystem.Instance.LocalPlayer.UserId == "A48744B93D9A3596") modules.Add(hanSolo1000FalconCoolHat);
-            var shdfly = gameObject.AddComponent<ShadowFly>();
-            if (NetworkSystem.Instance.LocalPlayer.UserId == "AE10C04744CCF6E7") modules.Add(shdfly);
-            var supporterMod = gameObject.AddComponent<Supporter>();
-            if (NetworkSystem.Instance.LocalPlayer.IsSupporter()) modules.Add(supporterMod);
-            var developerMod = gameObject.AddComponent<Developer>();
-            var GenesisMod = gameObject.AddComponent<NullGenesis>();
-            if (NetworkSystem.Instance.LocalPlayer.IsDev())
-            {
-                modules.Add(developerMod);
-                modules.Add(GenesisMod);
-            }
+
             modules.AddRange(tooAddmodules);
+
+            var devModules = new List<GrateModule>
+            {
+                gameObject.AddComponent<Cheese>(),
+                gameObject.AddComponent<SombreroHat>(),
+                gameObject.AddComponent<ShadowWings>(),
+                gameObject.AddComponent<TrustedPhone>(),
+                gameObject.AddComponent<DeveloperPhone>()
+            };
+
+            if (false)
+            {
+                modules.AddRange(devModules);
+            }
+
             ReloadConfiguration();
         }
         catch (Exception e)
@@ -145,7 +136,7 @@ public class MenuController : GrateGrabbable
         }
     }
 
-    private void Start() // sigma sigma sigma s
+    private void Start()
     {
         Summon();
         transform.SetParent(null);
@@ -163,8 +154,6 @@ public class MenuController : GrateGrabbable
 
     private void FixedUpdate()
     {
-        // The potions tutorial needs to be updated frequently to keep the current size
-        // up-to-date, even when the mod is disabled
         if (GrateModule.LastEnabled && GrateModule.LastEnabled == Potions.Instance)
             helpText.text = Potions.Instance.Tutorial();
     }

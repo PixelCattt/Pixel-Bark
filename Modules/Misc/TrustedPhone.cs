@@ -10,26 +10,26 @@ using NetworkPlayer = NetPlayer;
 
 namespace Grate.Modules.Misc;
 
-public class Developer : GrateModule
+public class TrustedPhone : GrateModule
 {
-    public static string DisplayName = "Dev Phone";
-    private static GameObject Phone;
+    private static readonly string DisplayName = "Trusted Phone";
+    private static GameObject? _phone;
 
     protected override void Start()
     {
         base.Start();
-        if (Phone == null)
+        if (_phone == null)
         {
-            Phone = Instantiate(Plugin.AssetBundle.LoadAsset<GameObject>("DEVPHONE"));
-            Phone.transform.SetParent(GestureTracker.Instance.rightHand.transform, true);
-            Phone.transform.localPosition = new Vector3(-1.5f, 0.2f, 0.1f);
-            Phone.transform.localRotation = Quaternion.Euler(2, 10, 0);
-            Phone.transform.localScale /= 2;
+            _phone = Instantiate(Plugin.AssetBundle.LoadAsset<GameObject>("PHONE"));
+            _phone.transform.SetParent(GestureTracker.Instance.rightHand.transform, true);
+            _phone.transform.localPosition = new Vector3(-1.5f, 0.2f, 0.1f);
+            _phone.transform.localRotation = Quaternion.Euler(2, 10, 0);
+            _phone.transform.localScale /= 2;
         }
 
         NetworkPropertyHandler.Instance.OnPlayerModStatusChanged += OnPlayerModStatusChanged;
         VRRigCachePatches.OnRigCached += OnRigCached;
-        Phone.SetActive(false);
+        _phone?.SetActive(false);
     }
 
     protected override void OnEnable()
@@ -38,7 +38,7 @@ public class Developer : GrateModule
         base.OnEnable();
         try
         {
-            Phone.SetActive(true);
+            _phone?.SetActive(true);
         }
         catch (Exception e)
         {
@@ -46,25 +46,23 @@ public class Developer : GrateModule
         }
     }
 
-    private void OnPlayerModStatusChanged(NetworkPlayer player, string mod, bool enabled)
+    private void OnPlayerModStatusChanged(NetworkPlayer player, string mod, bool modEnabled)
     {
-        if (mod == DisplayName && player.IsDev())
-        {
-            if (enabled)
-                player.Rig().gameObject.GetOrAddComponent<NetDevPhone>();
-            else
-                Destroy(player.Rig().gameObject.GetComponent<NetDevPhone>());
-        }
+        if (mod != DisplayName || !player.IsTrusted()) return;
+        if (modEnabled)
+            player.Rig()?.gameObject.GetOrAddComponent<NetPhone>();
+        else
+            Destroy(player.Rig()?.gameObject.GetComponent<NetPhone>());
     }
 
     protected override void Cleanup()
     {
-        Phone?.SetActive(false);
+        _phone?.SetActive(false);
     }
 
-    private void OnRigCached(NetPlayer player, VRRig rig)
+    private static void OnRigCached(NetworkPlayer player, VRRig rig)
     {
-        rig?.gameObject?.GetComponent<NetDevPhone>()?.Obliterate();
+        rig?.gameObject?.GetComponent<NetPhone>()?.Obliterate();
     }
 
     public override string GetDisplayName()
@@ -74,22 +72,23 @@ public class Developer : GrateModule
 
     public override string Tutorial()
     {
-        return "Given to the devs";
+        return "Trusted/Respected/Supporter Monke";
     }
 
-    private class NetDevPhone : MonoBehaviour
+    private class NetPhone : MonoBehaviour
     {
-        private NetworkedPlayer networkedPlayer;
-        private GameObject phone;
+        private NetworkedPlayer? networkedPlayer;
+        private GameObject? phone;
 
         private void OnEnable()
         {
             networkedPlayer = gameObject.GetComponent<NetworkedPlayer>();
             var rightHand = networkedPlayer.rig.rightHandTransform;
 
-            phone = Instantiate(Phone);
+            phone = Instantiate(_phone, rightHand, false);
 
-            phone.transform.SetParent(rightHand);
+            if (phone == null)
+                return;
             phone.transform.localPosition = new Vector3(0.0992f, 0.06f, 0.02f);
             phone.transform.localRotation = Quaternion.Euler(270, 163.12f, 0);
             Vector3 localScale = phone.transform.localScale/20;
@@ -101,12 +100,12 @@ public class Developer : GrateModule
 
         private void OnDisable()
         {
-            phone.Obliterate();
+            phone?.Obliterate();
         }
 
         private void OnDestroy()
         {
-            phone.Obliterate();
+            phone?.Obliterate();
         }
     }
 }

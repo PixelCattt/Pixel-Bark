@@ -99,10 +99,6 @@ public class Boxing : GrateModule
 
     public IEnumerator DelGloves()
     {
-        /*foreach (var g in Resources.FindObjectsOfTypeAll<BoxingGlove>())
-        {
-            g.Obliterate();
-        }*/
         foreach (var g in gloves) g.Obliterate();
         gloves.Clear();
         yield return new WaitForEndOfFrame();
@@ -115,7 +111,7 @@ public class Boxing : GrateModule
 
     private void CreateGloves()
     {
-        foreach (var rig in GorillaParent.instance.vrrigs)
+        foreach (var rig in VRRigCache.ActiveRigs)
             try
             {
                 if (rig != GorillaTagger.Instance.offlineVRRig && rig != GorillaTagger.Instance.myVRRig &&
@@ -130,15 +126,15 @@ public class Boxing : GrateModule
 
     private void GiveGlovesTo(VRRig rig)
     {
-        glovedRigs.Add(rig);
-        var lefty = CreateGlove(rig.leftHandTransform);
-        lefty.rig = rig;
-        gloves.Add(lefty);
-        var righty = CreateGlove(rig.rightHandTransform, false);
-        righty.rig = rig;
-        gloves.Add(righty);
-        Logging.Debug("Gave gloves to", rig.OwningNetPlayer.NickName);
-    }
+            glovedRigs.Add(rig);
+            var lefty = CreateGlove(rig.leftHandTransform);
+            lefty.rig = rig;
+            gloves.Add(lefty);
+            var righty = CreateGlove(rig.rightHandTransform, false);
+            righty.rig = rig;
+            gloves.Add(righty);
+            Logging.Debug("Gave gloves to", rig.OwningNetPlayer.NickName);
+        }
 
     private BoxingGlove CreateGlove(Transform parent, bool isLeft = true)
     {

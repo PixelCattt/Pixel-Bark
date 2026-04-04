@@ -45,6 +45,7 @@ public class Portal : GrateModule
             }
 
             launcher = Instantiate(launcherPrefab);
+            launcher.SetActive(false);
             orangeAudio = launcher.transform.Find("OrangeAudio").GetComponent<AudioSource>();
             blueAudio = launcher.transform.Find("BlueAudio").GetComponent<AudioSource>();
             launcher.transform.Find("PortalBeam").Obliterate();
@@ -61,6 +62,15 @@ public class Portal : GrateModule
         }
     }
 
+    private void ShowLauncher(InputTracker _)
+    {
+        launcher.SetActive(true);
+    }
+
+    private void HideLauncher(InputTracker _)
+    {
+        launcher.SetActive(false);
+    }
 
     private void Fire(int portal)
     {
@@ -73,13 +83,6 @@ public class Portal : GrateModule
         var hit = Raycast(launcher.transform.GetChild(0).position, launcher.transform.GetChild(0).transform.forward);
         if (!hit.collider) return;
         MakePortal(hit.point, hit.normal, portal);
-
-        // try
-        // {
-        // 
-        // 
-        // }
-        // catch (Exception e) { Logging.Exception(e); }
     }
 
     private GameObject MakePortal(Vector3 position, Vector3 normal, int index)
@@ -87,7 +90,6 @@ public class Portal : GrateModule
         GameObject portal = null;
         try
         {
-            // yes i know this is a dogshit way to do it but im tired and cant be fucked finding another way
             portals[index]?.Obliterate();
             portals.Remove(index);
         }
@@ -108,7 +110,7 @@ public class Portal : GrateModule
             smokeSystems[0].startColor = new Color(0, 160, 255);
         }
 
-        GestureTracker.Instance.HapticPulse(false, 1, .25f);
+        GestureTracker.Instance.HapticPulse(hand == XRNode.LeftHand, 1, .25f);
         foreach (var system in smokeSystems)
         {
             system.gameObject.SetActive(true);
@@ -194,6 +196,8 @@ public class Portal : GrateModule
         var primary = GestureTracker.Instance.GetInputTracker("primary", hand);
         var secondary = GestureTracker.Instance.GetInputTracker("secondary", hand);
 
+        grip.OnPressed += ShowLauncher;
+        grip.OnReleased += HideLauncher;
         primary.OnPressed += FireA;
         secondary.OnPressed += FireB;
         foreach (var portal in portals.Values)
@@ -234,6 +238,8 @@ public class Portal : GrateModule
         var grip = GestureTracker.Instance.GetInputTracker("grip", hand);
         var primary = GestureTracker.Instance.GetInputTracker("primary", hand);
         var secondary = GestureTracker.Instance.GetInputTracker("secondary", hand);
+        grip.OnPressed -= ShowLauncher;
+        grip.OnReleased -= HideLauncher;
         primary.OnPressed -= FireA;
         secondary.OnPressed -= FireB;
     }
@@ -267,7 +273,9 @@ public class Portal : GrateModule
 
     public override string Tutorial()
     {
+        string buttons = LauncherHand.Value == "right" ? "A / B" : "X / Y";
+
         var h = LauncherHand.Value.Substring(0, 1).ToUpper() + LauncherHand.Value.Substring(1);
-        return $"Hold [{h} Grip] to summon the portal cannon. Use [{h} A / B] to fire the portals.";
+        return $"Hold [{h} Grip] to summon the portal cannon. Use [{h} {buttons}] to fire the portals.";
     }
 }

@@ -89,7 +89,7 @@ public class Grab : GrateModule
 
     private void DistributeGrabbyThings()
     {
-        foreach (var rig in GorillaParent.instance.vrrigs)
+        foreach (var rig in VRRigCache.ActiveRigs)
             try
             {
                 if (rig.OwningNetPlayer.IsLocal ||

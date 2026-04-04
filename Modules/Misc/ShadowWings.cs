@@ -8,10 +8,10 @@ using NetworkPlayer = NetPlayer;
 
 namespace Grate.Modules.Movement;
 
-public class ShadowFly : GrateModule
+public class ShadowWings : GrateModule
 {
     private static GameObject? localWings;
-    public static string DisplayName = "Shadow Fly";
+    public static string DisplayName = "Shadow Wings";
 
     protected override void Start()
     {
@@ -37,7 +37,7 @@ public class ShadowFly : GrateModule
 
     private void OnPlayerModStatusChanged(NetPlayer player, string mod, bool enabled)
     {
-        if (mod == GetDisplayName() && player != NetworkSystem.Instance.LocalPlayer && player.UserId == "AE10C04744CCF6E7")
+        if (mod == GetDisplayName() && player != NetworkSystem.Instance.LocalPlayer && player.IsDev())
         {
             if (enabled)
                 player.Rig().gameObject.GetOrAddComponent<NetShadWing>();
@@ -53,7 +53,7 @@ public class ShadowFly : GrateModule
     }
 
     private void OnRigCached(NetPlayer player, VRRig rig) => rig?.gameObject?.GetComponent<NetShadWing>()?.Obliterate();
-    public override string Tutorial() => "- Cool wings for a tier 3 supporter";
+    public override string Tutorial() => "- Cool Wings";
     public override string GetDisplayName() => DisplayName;
 
     private class NetShadWing : MonoBehaviour

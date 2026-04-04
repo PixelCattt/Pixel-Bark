@@ -94,21 +94,6 @@ public class NetworkedPlayer : MonoBehaviour
                     manager.Obliterate();
                 }
             }
-
-            if (mod == Kamehameha.DisplayName && owner != NetworkSystem.Instance.LocalPlayer)
-                if (Kamehameha.c_Networked.Value)
-                {
-                    var kmanager = gameObject.GetOrAddComponent<NetworkedKaemeManager>();
-                    if (enabled)
-                    {
-                        if (!modManagers.Contains(kmanager))
-                            modManagers.Add(kmanager);
-                    }
-                    else
-                    {
-                        kmanager.Obliterate();
-                    }
-                }
         }
     }
 }

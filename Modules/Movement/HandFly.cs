@@ -1,86 +1,129 @@
 ﻿using BepInEx.Configuration;
 using GorillaLocomotion;
-using Grate.Extensions;
+using Grate.Gestures;
 using Grate.GUI;
 using UnityEngine;
+using UnityEngine.XR;
 
 namespace Grate.Modules.Movement;
-
-public class LocalGorillaVelocityTracker : MonoBehaviour
-{
-    private Vector3 previousLocalPosition;
-    private Vector3 velocity;
-
-    private void Start()
-    {
-        previousLocalPosition = transform.localPosition;
-    }
-
-    private void Update()
-    {
-        var localDisplacement = transform.localPosition - previousLocalPosition;
-        var localVelocity = localDisplacement / Time.deltaTime;
-
-        velocity = transform.parent.TransformDirection(localVelocity);
-
-        previousLocalPosition = transform.localPosition;
-    }
-
-    public Vector3 GetVelocity()
-    {
-        return velocity;
-    }
-}
 
 public class HandFly : GrateModule
 {
     public static string DisplayName = "Hand Fly";
 
     private static ConfigEntry<int>? Speed;
-    private LocalGorillaVelocityTracker? left;
-    private LocalGorillaVelocityTracker? right;
 
-    //used desmos for ts
-    private float SpeedScale => Speed!.Value * 2.5f + 10;
+    private bool leftTrigger;
+    private bool rightTrigger;
+
+    private float SpeedScale => Speed!.Value * 2.5f + 10f;
 
     private void FixedUpdate()
     {
-        if (ControllerInputPoller.instance.leftControllerIndexFloat > 0.5f)
-            GorillaTagger.Instance.rigidbody.velocity -= right!.GetVelocity() / SpeedScale * GTPlayer.Instance.scale;
+        var rb = GorillaTagger.Instance.rigidbody;
 
-        if (ControllerInputPoller.instance.rightControllerIndexFloat > 0.5f)
-            GorillaTagger.Instance.rigidbody.velocity -= left!.GetVelocity() / SpeedScale * GTPlayer.Instance.scale;
+        bool any = leftTrigger || rightTrigger;
+        bool both = leftTrigger && rightTrigger;
+
+        if (!any)
+            return;
+
+        float multiplier = both ? 2f : 1f;
+
+        Vector3 dir = GetFlyDirection();
+
+        // important: stop gravity fighting your flight
+        rb.velocity = Vector3.zero;
+
+        rb.MovePosition(rb.position + dir * (SpeedScale * multiplier * Time.fixedDeltaTime));
     }
+
+    private Vector3 GetFlyDirection()
+    {
+        Vector3 dir = Vector3.zero;
+
+        if (leftTrigger)
+        {
+            var left = GetTrueHandPosition(true);
+            dir += left.forward;
+        }
+
+        if (rightTrigger)
+        {
+            var right = GetTrueHandPosition(false);
+            dir += right.forward;
+        }
+
+        if (dir == Vector3.zero)
+            return GTPlayer.Instance.bodyCollider.transform.forward;
+
+        return dir.normalized;
+    }
+
+    // ===== TRUE HAND SPACE (your system, cleaned & fixed) =====
+
+    public static (Vector3 position, Quaternion rotation, Vector3 up, Vector3 forward, Vector3 right)
+    GetTrueHandPosition(bool left)
+    {
+        Transform controllerTransform = left
+            ? GorillaTagger.Instance.leftHandTransform
+            : GorillaTagger.Instance.rightHandTransform;
+
+        GTPlayer.HandState handState = left
+            ? GTPlayer.Instance.LeftHand
+            : GTPlayer.Instance.RightHand;
+
+        Quaternion rot = controllerTransform.rotation * handState.handRotOffset;
+
+        Vector3 pos =
+            controllerTransform.position +
+            controllerTransform.rotation *
+            (handState.handOffset * GTPlayer.Instance.scale);
+
+        return (
+            pos,
+            rot,
+            rot * Vector3.up,
+            rot * Vector3.forward,
+            rot * Vector3.right
+        );
+    }
+
+    public static (Vector3 position, Quaternion rotation, Vector3 up, Vector3 forward, Vector3 right)
+        GetTrueRightHand() => GetTrueHandPosition(false);
+
+    public static (Vector3 position, Quaternion rotation, Vector3 up, Vector3 forward, Vector3 right)
+        GetTrueLeftHand() => GetTrueHandPosition(true);
+
+    // ===== INPUT =====
 
     protected override void OnEnable()
     {
-        if (!MenuController.Instance.Built || !enabled) return;
-        Plugin.MenuController?.GetComponent<Fly>().button.AddBlocker(ButtonController.Blocker.MOD_INCOMPAT);
-        right = GTPlayer.Instance.LeftHand.controllerTransform.AddComponent<LocalGorillaVelocityTracker>();
-        left = GTPlayer.Instance.RightHand.controllerTransform.AddComponent<LocalGorillaVelocityTracker>();
-        ReloadConfiguration();
         base.OnEnable();
-    }
 
+        var left = GestureTracker.Instance.GetInputTracker("trigger", XRNode.LeftHand);
+        var right = GestureTracker.Instance.GetInputTracker("trigger", XRNode.RightHand);
 
-    public override string GetDisplayName()
-    {
-        return DisplayName;
-    }
+        left.OnPressed += _ => leftTrigger = true;
+        left.OnReleased += _ => leftTrigger = false;
 
-    public override string Tutorial()
-    {
-        return "-To fly, press 'Trigger' to Throw yourself,\n" +
-               "both hands for more speed";
+        right.OnPressed += _ => rightTrigger = true;
+        right.OnReleased += _ => rightTrigger = false;
     }
 
     protected override void Cleanup()
     {
-        Plugin.MenuController?.GetComponent<Fly>().button.RemoveBlocker(ButtonController.Blocker.MOD_INCOMPAT);
-        if (right != null) right.Obliterate();
-        if (left != null) left.Obliterate();
+        leftTrigger = false;
+        rightTrigger = false;
     }
 
+    public override string GetDisplayName() => DisplayName;
+
+    public override string Tutorial()
+    {
+        return "- Hold trigger to fly in true hand direction\n" +
+               "- Both triggers = double speed";
+    }
 
     public static void BindConfigEntries()
     {
@@ -88,7 +131,7 @@ public class HandFly : GrateModule
             DisplayName,
             "speed",
             5,
-            "How fast you fly"
+            "Flight speed"
         );
     }
 }

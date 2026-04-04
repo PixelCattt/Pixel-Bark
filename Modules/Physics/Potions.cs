@@ -71,7 +71,7 @@ public class Potions : GrateModule
     protected override void OnDestroy()
     {
         base.OnDestroy();
-        foreach (var rig in GorillaParent.instance.vrrigs)
+        foreach (var rig in VRRigCache.ActiveRigs)
         {
             try
             {

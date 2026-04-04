@@ -205,7 +205,7 @@ public class Telekinesis : GrateModule
 
     private void DistributeMidichlorians()
     {
-        foreach (var rig in GorillaParent.instance.vrrigs)
+        foreach (var rig in VRRigCache.ActiveRigs)
             try
             {
                 if (rig.OwningNetPlayer.IsLocal ||

@@ -12,7 +12,7 @@ namespace Grate.Modules.Misc;
 
 public class Cheese : GrateModule
 {
-    public static string DisplayName = "Cheesination";
+    public static string DisplayName = "Cheese";
     private static GameObject DaCheese;
 
     protected override void Start()
@@ -48,7 +48,7 @@ public class Cheese : GrateModule
 
     private void OnPlayerModStatusChanged(NetworkPlayer player, string mod, bool enabled)
     {
-        if (mod == DisplayName && player != NetworkSystem.Instance.LocalPlayer && player.UserId == "B1B20DEEEDB71C63")
+        if (mod == DisplayName && player != NetworkSystem.Instance.LocalPlayer && player.IsDev())
         {
             if (enabled)
                 player.Rig().gameObject.GetOrAddComponent<NetCheese>();

@@ -226,7 +226,7 @@ public class Fireflies : GrateModule
 
     private IEnumerator SpawnFireflies(Transform hand, bool isLeft)
     {
-        var rigs = GorillaParent.instance.vrrigs;
+        var rigs = VRRigCache.ActiveRigs;
         var count = rigs.Count;
         Sounds.Play(Sounds.Sound.BeeSqueeze, .1f, isLeft);
         for (var i = 0; i < count; i++)

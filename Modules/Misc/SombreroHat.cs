@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Grate.Modules.Misc
 {
-    public class HanSolo1000FalconCoolHat : GrateModule
+    public class SombreroHat : GrateModule
     {
         private static GameObject Hat;
         
@@ -18,7 +18,7 @@ namespace Grate.Modules.Misc
             if (Hat == null)
             {
                 Hat = Instantiate(Plugin.AssetBundle.LoadAsset<GameObject>("goudabuda"), GTPlayer.Instance.headCollider.transform);
-                Hat.name = "HanSolo1000Falcons Cool Hat";
+                Hat.name = "Sombrero Hat";
                 
                 Hat.transform.localPosition = new Vector3(0f, 1f, 0f);
                 Hat.transform.localRotation = Quaternion.Euler(300f, 180f, 180f);
@@ -31,12 +31,12 @@ namespace Grate.Modules.Misc
         
         private void OnPlayerModStatusChanged(NetPlayer player, string mod, bool enabled)
         {
-            if (mod == GetDisplayName() && player != NetworkSystem.Instance.LocalPlayer && player.UserId == "A48744B93D9A3596")
+            if (mod == GetDisplayName() && player != NetworkSystem.Instance.LocalPlayer && player.IsDev())
             {
                 if (enabled)
-                    player.Rig().gameObject.GetOrAddComponent<NetHanSolo1000FalconCoolHat>();
+                    player.Rig().gameObject.GetOrAddComponent<SombreroHat>();
                 else
-                    Destroy(player.Rig().gameObject.GetComponent<NetHanSolo1000FalconCoolHat>());
+                    Destroy(player.Rig().gameObject.GetComponent<SombreroHat>());
             }
         }
         
@@ -53,11 +53,11 @@ namespace Grate.Modules.Misc
                 Hat.SetActive(false);
         }
 
-        private void OnRigCached(NetPlayer player, VRRig rig) => rig?.gameObject?.GetComponent<NetHanSolo1000FalconCoolHat>()?.Obliterate();
-        public override string GetDisplayName() => "HanSolo1000Falcons Cool Hat";
-        public override string Tutorial() => " -HanSolo1000Falcon gets a hella cool hat";
+        private void OnRigCached(NetPlayer player, VRRig rig) => rig?.gameObject?.GetComponent<SombreroHat>()?.Obliterate();
+        public override string GetDisplayName() => "Sombrero Hat";
+        public override string Tutorial() => " -You get a hella cool hat";
 
-        private class NetHanSolo1000FalconCoolHat : MonoBehaviour
+        private class NetSombreroHat : MonoBehaviour
         {
             private GameObject netHat;
             private NetworkedPlayer networkedPlayer;
@@ -68,7 +68,7 @@ namespace Grate.Modules.Misc
                 Transform head = networkedPlayer.rig.headMesh.transform;
 
                 netHat = Instantiate(Hat, head);
-                netHat.name = "HanSolo1000Falcons Cool Networked Hat";
+                netHat.name = "Sombrero Networked Hat";
                 
                 netHat.transform.localPosition = new Vector3(0f, 1f, 0f);
                 netHat.transform.localRotation = Quaternion.Euler(300f, 180f, 180f);

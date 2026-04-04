@@ -12,9 +12,11 @@ using Grate.Extensions;
 using Grate.Gestures;
 using Grate.GUI;
 using Grate.Modules;
+using Grate.Modules.Multiplayer;
 using Grate.Networking;
 using Grate.Tools;
 using HarmonyLib;
+using Photon.Pun.UtilityScripts;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -29,7 +31,7 @@ public class Plugin : BaseUnityPlugin
     public static MenuController? MenuController;
     private static GameObject? monkeMenuPrefab;
     public static ConfigFile? ConfigFile;
-    public static bool LocalPlayerSupporter;
+    public static bool LocalPlayerTrusted;
     public static bool LocalPlayerDev;
     public static bool LocalPlayerAdmin;
 
@@ -53,7 +55,7 @@ public class Plugin : BaseUnityPlugin
         }
 
         GorillaTagger.OnPlayerSpawned(OnGameInitialized);
-        AssetBundle = AssetUtils.LoadAssetBundle("Grate/Resources/gratebundle");
+        AssetBundle = AssetUtils.LoadAssetBundle("Grate.Resources.gratebundle");
         monkeMenuPrefab = AssetBundle?.LoadAsset<GameObject>("Bark Menu");
         monkeMenuPrefab!.name = "Grate Menu";
         MenuController.BindConfigEntries();
@@ -66,7 +68,7 @@ public class Plugin : BaseUnityPlugin
         MenuController = Instantiate(monkeMenuPrefab)?.AddComponent<MenuController>();
         LocalPlayerDev = NetworkSystem.Instance.LocalPlayer.IsDev();
         LocalPlayerAdmin = NetworkSystem.Instance.LocalPlayer.IsAdmin();
-        LocalPlayerSupporter = NetworkSystem.Instance.LocalPlayer.IsSupporter();
+        LocalPlayerTrusted = NetworkSystem.Instance.LocalPlayer.IsTrusted();
     }
 
     public void Cleanup()
@@ -141,7 +143,7 @@ public class Plugin : BaseUnityPlugin
             IsSteam = platform.PlatformTag.Contains("Steam");
 
             Setup();
-            
+
             if (DebugMode)
                 CreateDebugGUI();
         }
