@@ -6,6 +6,6 @@
   </a>
   
   <a href="https://github.com/PixelCattt/Pixels.Grate.Menu/releases">
-    <img src="https://img.shields.io/github/downloads/PixelCattt/Pixel-Bark/v1.8.9/Pixels_Grate_Menu.dll?style=for-the-badge&label=Downloads&color=lime"</img>
+    <img src="https://img.shields.io/github/downloads/PixelCattt/Pixel-Bark/v1.8.9/Pixel-Bark.dll?style=for-the-badge&label=Downloads&color=lime"</img>
   </a>
 </div>
