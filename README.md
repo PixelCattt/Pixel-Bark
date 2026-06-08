@@ -6,6 +6,7 @@
   </a>
   
   <a href="https://github.com/PixelCattt/Pixel-Bark/releases">
-    <img src="https://img.shields.io/github/downloads/PixelCattt/Pixel-Bark/v1.9.0/Pixel-Bark.dll?style=for-the-badge&label=Downloads&color=lime"</img>
+    <img src="https://img.shields.io/github/downloads/PixelCattt/Pixel-Bark/total?style=for-the-badge&label=Downloads%20Total&color=lime"</img>
+    <img src="https://img.shields.io/github/downloads/PixelCattt/Pixel-Bark/v1.9.0/Pixel-Bark.dll?style=for-the-badge&label=Downloads%20v1.9.0&color=lime"</img>
   </a>
 </div>
